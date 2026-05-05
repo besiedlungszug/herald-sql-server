@@ -32,6 +32,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Get Dolt Version
         run: |
           echo "DOLT_VERSION=$(cat opt/DOLT_VERSION)" >> $GITHUB_ENV
       - name: Build
