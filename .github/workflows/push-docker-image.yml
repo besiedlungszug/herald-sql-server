@@ -1,0 +1,46 @@
+name: Push Docker Image to DockerHub
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  get-herald-release:
+    name: Get Herald Release
+    runs-on: ubuntu-22.04
+    outputs:
+      release: ${{ steps.get_release.outputs.release }}
+      branch: ${{ steps.get_herald_branch.outputs.branch }}
+    steps:
+      - name: Get Release
+        id: get_release
+        run: |
+          VERSION=${{ github.event.release.tag_name }}
+          RELEASE=${VERSION#v}
+          echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+          echo "release=$RELEASE" >> $GITHUB_OUTPUT
+      - name: Get Herald Branch
+        id: get_herald_branch
+        run: |
+          BRANCH=$(awk -F'.' '{print "release/"$1"."$2}')
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+  docker-image-build:
+    name: Build Docker Image
+    needs: get-herald-release
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        run: |
+          echo "DOLT_VERSION=$(cat opt/DOLT_VERSION)" >> $GITHUB_ENV
+      - name: Build
+        uses: docker/build-push-action@v5
+        with:
+          context: src/
+          push: false
+          tags: besiedlungszug/herald-sql-server:${{ needs.get-herald-release.outputs.release }}
+          build-args: |
+            DOLT_VERSION=${{ env.DOLT_VERSION }}
+            HERALD_BRANCH=${{ needs.get-herald-release.outputs.branch }}
+        
