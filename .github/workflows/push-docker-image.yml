@@ -22,7 +22,7 @@ jobs:
       - name: Get Herald Branch
         id: get_herald_branch
         run: |
-          BRANCH=$(awk -F'.' '{print "release/"$1"."$2}')
+          BRANCH=$(echo $RELEASE | awk -F'.' '{print "release/"$1"."$2}')
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
   docker-image-build:
